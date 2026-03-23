@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stegspelet</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    min-height: 100vh;
+    background: linear-gradient(165deg, #0f0c29 0%, #1a1a3e 40%, #24243e 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 12px;
+    font-family: 'Fredoka', sans-serif;
+    color: #fff;
+    overflow-x: hidden;
+  }
+  @keyframes diceRoll {
+    0% { transform: rotate(0deg) scale(0.5); opacity: 0.3; }
+    50% { transform: rotate(180deg) scale(1.15); }
+    100% { transform: rotate(360deg) scale(1); opacity: 1; }
+  }
+  @keyframes popIn {
+    0% { transform: scale(0.5); opacity: 0; }
+    60% { transform: scale(1.2); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255,200,60,0.4); }
+    50% { box-shadow: 0 0 20px 6px rgba(255,200,60,0.15); }
+  }
+  @keyframes shimmer {
+    0% { background-position: -200% center; }
+    100% { background-position: 200% center; }
+  }
+  h1 {
+    font-size: 32px; font-weight: 700; margin: 0 0 4px 0;
+    background: linear-gradient(90deg, #ffc83d, #ff6b6b, #4ecdc4, #ffc83d);
+    background-size: 200% auto;
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    animation: shimmer 4s linear infinite; letter-spacing: 2px;
+  }
+  #scoreboard {
+    display: flex; gap: 24px; align-items: center;
+    margin: 8px 0 16px; padding: 10px 28px;
+    background: rgba(255,255,255,0.06); border-radius: 16px;
+    backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.08);
+  }
+  .score-label { font-size: 12px; font-weight: 600; letter-spacing: 1px; }
+  .score-num { font-size: 28px; font-weight: 700; }
+  .score-mid { font-size: 13px; color: rgba(255,255,255,0.3); padding: 0 8px; }
+  #message {
+    font-size: 15px; font-weight: 500; color: rgba(255,255,255,0.85);
+    text-align: center; min-height: 26px; margin-bottom: 12px;
+    max-width: 360px; line-height: 1.4;
+  }
+  #dice-area {
+    display: flex; gap: 16px; align-items: center;
+    margin-bottom: 6px; min-height: 60px;
+  }
+  .dice-svg {
+    width: 56px; height: 56px;
+    filter: drop-shadow(2px 3px 4px rgba(0,0,0,0.25));
+  }
+  .dice-svg.rolling { animation: diceRoll 0.5s ease-out; }
+  .dice-plus { font-size: 22px; font-weight: 700; color: rgba(255,255,255,0.5); }
+  #dice-sum {
+    font-size: 26px; font-weight: 700; color: #ffc83d;
+    margin-left: 8px; animation: float 2s ease-in-out infinite;
+  }
+  .btn {
+    font-family: 'Fredoka', sans-serif; font-size: 18px; font-weight: 700;
+    padding: 12px 36px; border-radius: 50px; border: none;
+    cursor: pointer; margin-bottom: 16px; letter-spacing: 1px;
+    transition: transform 0.15s;
+  }
+  .btn:hover { transform: scale(1.08); }
+  .btn-roll {
+    background: linear-gradient(135deg, #ffc83d, #f0a030);
+    color: #1a1a2e; box-shadow: 0 4px 20px rgba(255,200,60,0.3);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  .btn-restart {
+    background: linear-gradient(135deg, #4ecdc4, #2ea69e);
+    color: #fff; box-shadow: 0 4px 20px rgba(78,205,196,0.3);
+  }
+  #hint {
+    font-size: 13px; color: #ffc83d; margin-bottom: 14px;
+    font-weight: 500; animation: float 1.5s ease-in-out infinite;
+  }
+  #comp-thinking {
+    font-size: 14px; color: #ff6b6b; margin-bottom: 14px; font-weight: 500;
+  }
+  #ladders {
+    display: flex; gap: 40px; justify-content: center;
+    align-items: flex-start; flex-wrap: wrap;
+  }
+  .ladder-col { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .ladder-title {
+    font-weight: 600; font-size: 18px; margin-bottom: 6px;
+    text-transform: uppercase; letter-spacing: 1.5px; transition: all 0.3s;
+  }
+  .ladder-slots { display: flex; flex-direction: column-reverse; gap: 4px; }
+  .slot {
+    width: 64px; height: 42px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; transition: all 0.2s ease;
+  }
+  .slot.empty { font-size: 13px; background: rgba(255,255,255,0.06); border: 2px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.2); }
+  .slot.filled { font-size: 22px; }
+  .slot.valid { cursor: pointer; transform: scale(1.05); }
+  .slot.highlight { animation: popIn 0.4s ease-out; transform: scale(1.1); }
+  .ladder-count { font-size: 12px; color: rgba(255,255,255,0.35); margin-top: 4px; }
+  .middle-col {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; align-self: center; gap: 4px; padding: 12px 0;
+  }
+  .middle-label { font-size: 11px; color: rgba(255,255,255,0.2); font-weight: 500; }
+  .middle-num {
+    width: 28px; height: 42px; display: flex; align-items: center;
+    justify-content: center; font-size: 11px; color: rgba(255,255,255,0.15); font-weight: 500;
+  }
+  #rules {
+    margin-top: 24px; padding: 16px 20px;
+    background: rgba(255,255,255,0.04); border-radius: 14px;
+    max-width: 380px; border: 1px solid rgba(255,255,255,0.06);
+  }
+  #rules h3 { font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.5); margin-bottom: 6px; }
+  #rules p { font-size: 12px; color: rgba(255,255,255,0.35); line-height: 1.7; }
+</style>
+</head>
+<body>
+
+<h1>🪜 STEGSPELET 🪜</h1>
+
+<div id="scoreboard">
+  <div style="text-align:center">
+    <div class="score-label" style="color:#4ecdc4">DU</div>
+    <div class="score-num" style="color:#4ecdc4" id="score-player">0</div>
+  </div>
+  <div class="score-mid" id="score-rounds">vs</div>
+  <div style="text-align:center">
+    <div class="score-label" style="color:#ff6b6b">DATOR</div>
+    <div class="score-num" style="color:#ff6b6b" id="score-computer">0</div>
+  </div>
+</div>
+
+<div id="message">Välkommen till Stegspelet!</div>
+
+<div id="dice-area"></div>
+
+<div id="action-area"></div>
+
+<div id="ladders">
+  <div class="ladder-col">
+    <div class="ladder-title" style="color:#4ecdc4" id="player-title">🧑 Du</div>
+    <div class="ladder-slots" id="player-ladder"></div>
+    <div class="ladder-count" id="player-count">0/10</div>
+  </div>
+  <div class="middle-col" id="middle-nums"></div>
+  <div class="ladder-col">
+    <div class="ladder-title" style="color:#ff6b6b" id="computer-title">🤖 Dator</div>
+    <div class="ladder-slots" id="computer-ladder"></div>
+    <div class="ladder-count" id="computer-count">0/10</div>
+  </div>
+</div>
+
+<div id="rules">
+  <h3>📖 Regler</h3>
+  <p>Slå två tärningar och placera summan (2–12) i din stege.
+  Talen måste vara i stigande ordning nerifrån och upp —
+  du kan inte lägga ett lägre tal ovanför ett högre!
+  Kan du inte placera talet förlorar du turen.
+  Fyll stegen först för att vinna! 🏆</p>
+</div>
+
+<script>
+const SLOTS = 10, MIN_SUM = 2, MAX_SUM = 12;
+let playerLadder, computerLadder, dice, phase, currentPlayer, scores, rounds;
+
+function init() {
+  scores = { player: 0, computer: 0 };
+  rounds = 0;
+  phase = "start";
+  renderScoreboard();
+  renderAction();
+}
+
+function resetGame() {
+  playerLadder = Array(SLOTS).fill(null);
+  computerLadder = Array(SLOTS).fill(null);
+  dice = [0, 0];
+  phase = "roll";
+  currentPlayer = "player";
+  setMessage("Din tur — slå tärningarna! 🎲");
+  renderAll();
+}
+
+function rollDie() { return Math.floor(Math.random() * 6) + 1; }
+
+function getValidSlots(ladder, value) {
+  const valid = [];
+  for (let i = 0; i < SLOTS; i++) {
+    if (ladder[i] !== null) continue;
+    const below = ladder.slice(0, i).filter(v => v !== null);
+    const above = ladder.slice(i + 1).filter(v => v !== null);
+    const maxBelow = below.length > 0 ? Math.max(...below) : MIN_SUM - 1;
+    const minAbove = above.length > 0 ? Math.min(...above) : MAX_SUM + 1;
+    if (value >= maxBelow && value <= minAbove) valid.push(i);
+  }
+  return valid;
+}
+
+function isFull(ladder) { return ladder.every(v => v !== null); }
+
+function computerChooseSlot(ladder, value) {
+  const valid = getValidSlots(ladder, value);
+  if (valid.length === 0) return -1;
+  const ideal = ((value - MIN_SUM) / (MAX_SUM - MIN_SUM)) * (SLOTS - 1);
+  let best = valid[0], bestD = Math.abs(valid[0] - ideal);
+  for (const s of valid) { const d = Math.abs(s - ideal); if (d < bestD) { bestD = d; best = s; } }
+  return best;
+}
+
+function setMessage(txt) { document.getElementById("message").textContent = txt; }
+
+function makeDiceSVG(value, color, rolling) {
+  const positions = {
+    1:[[50,50]],2:[[28,28],[72,72]],3:[[28,28],[50,50],[72,72]],
+    4:[[28,28],[72,28],[28,72],[72,72]],5:[[28,28],[72,28],[50,50],[28,72],[72,72]],
+    6:[[28,28],[72,28],[28,50],[72,50],[28,72],[72,72]]
+  };
+  const dots = (positions[value]||[]).map(([cx,cy]) =>
+    `<circle cx="${cx}" cy="${cy}" r="8" fill="${color}"/>`).join("");
+  return `<svg viewBox="0 0 100 100" class="dice-svg${rolling?" rolling":""}">
+    <rect x="2" y="2" width="96" height="96" rx="16" fill="#fffef5" stroke="#d4c5a0" stroke-width="2.5"/>
+    ${dots}</svg>`;
+}
+
+function renderDice(rolling) {
+  const area = document.getElementById("dice-area");
+  if (dice[0] === 0) { area.innerHTML = ""; return; }
+  const c = currentPlayer === "player" ? "#1a5c52" : "#6b2020";
+  area.innerHTML = makeDiceSVG(dice[0], c, rolling) +
+    `<span class="dice-plus">+</span>` +
+    makeDiceSVG(dice[1], c, rolling) +
+    (rolling ? "" : `<div id="dice-sum">= ${dice[0]+dice[1]}</div>`);
+}
+
+function renderLadder(id, ladder, validSlots, color, highlightIdx) {
+  const el = document.getElementById(id);
+  el.innerHTML = "";
+  for (let i = SLOTS - 1; i >= 0; i--) {
+    const div = document.createElement("div");
+    div.className = "slot";
+    const val = ladder[i];
+    const isValid = validSlots.includes(i);
+    const isEmpty = val === null;
+    if (isEmpty && !isValid) {
+      div.classList.add("empty");
+      div.textContent = i + 1;
+    } else if (isEmpty && isValid) {
+      div.classList.add("valid");
+      div.style.background = `linear-gradient(135deg, ${color}15, ${color}30)`;
+      div.style.border = `2.5px solid ${color}`;
+      div.style.color = color;
+      div.style.boxShadow = `0 0 15px ${color}33, inset 0 0 10px ${color}11`;
+      div.style.fontSize = "13px";
+      div.textContent = i + 1;
+      div.onclick = () => placePlayer(i);
+    } else {
+      div.classList.add("filled");
+      div.style.background = `linear-gradient(135deg, ${color}22, ${color}44)`;
+      div.style.border = `2px solid ${color}66`;
+      div.style.color = color;
+      div.textContent = val;
+      if (highlightIdx === i) div.classList.add("highlight");
+    }
+    el.appendChild(div);
+  }
+  const countId = id.replace("-ladder", "-count");
+  document.getElementById(countId).textContent =
+    ladder.filter(v => v !== null).length + "/10";
+}
+
+function renderMiddle() {
+  const el = document.getElementById("middle-nums");
+  el.innerHTML = `<div class="middle-label">PLATS</div>`;
+  for (let i = SLOTS; i >= 1; i--) {
+    el.innerHTML += `<div class="middle-num">${i}</div>`;
+  }
+}
+
+function renderAction() {
+  const area = document.getElementById("action-area");
+  if (phase === "start") {
+    area.innerHTML = `<button class="btn btn-roll" onclick="resetGame()">🎲 Starta spel</button>`;
+  } else if (phase === "roll") {
+    area.innerHTML = `<button class="btn btn-roll" onclick="doRoll()">🎲 Slå tärningarna</button>`;
+  } else if (phase === "place") {
+    area.innerHTML = `<div id="hint">▼ Tryck på en lysande ruta i din stege ▼</div>`;
+  } else if (phase === "computerTurn") {
+    area.innerHTML = `<div id="comp-thinking">Datorns tur...</div>`;
+  } else if (phase === "gameOver") {
+    area.innerHTML = `<button class="btn btn-restart" onclick="resetGame()">🔄 Spela igen</button>`;
+  }
+}
+
+function renderScoreboard() {
+  document.getElementById("score-player").textContent = scores.player;
+  document.getElementById("score-computer").textContent = scores.computer;
+  document.getElementById("score-rounds").textContent =
+    rounds > 0 ? `${rounds} ${rounds === 1 ? "runda" : "rundor"}` : "vs";
+}
+
+function renderAll() {
+  const sum = dice[0] + dice[1];
+  const pValid = phase === "place" && currentPlayer === "player"
+    ? getValidSlots(playerLadder, sum) : [];
+  renderDice(false);
+  renderLadder("player-ladder", playerLadder, pValid, "#4ecdc4", null);
+  renderLadder("computer-ladder", computerLadder, [], "#ff6b6b", null);
+  renderMiddle();
+  renderAction();
+  renderScoreboard();
+  // Active glow
+  document.getElementById("player-title").style.textShadow =
+    currentPlayer === "player" ? "0 0 20px #4ecdc455" : "none";
+  document.getElementById("computer-title").style.textShadow =
+    currentPlayer === "computer" ? "0 0 20px #ff6b6b55" : "none";
+}
+
+function doRoll() {
+  if (phase !== "roll" || currentPlayer !== "player") return;
+  const d1 = rollDie(), d2 = rollDie();
+  dice = [d1, d2];
+  renderDice(true);
+  setTimeout(() => {
+    renderDice(false);
+    const sum = d1 + d2;
+    const valid = getValidSlots(playerLadder, sum);
+    if (valid.length === 0) {
+      setMessage(`Du slog ${d1} + ${d2} = ${sum}. Kan inte placeras — turen går vidare!`);
+      phase = "computerTurn";
+      renderAction();
+      computerTurn();
+    } else {
+      setMessage(`Du slog ${d1} + ${d2} = ${sum}. Välj en plats i din stege!`);
+      phase = "place";
+      renderAll();
+    }
+  }, 500);
+}
+
+function placePlayer(idx) {
+  if (phase !== "place" || currentPlayer !== "player") return;
+  const sum = dice[0] + dice[1];
+  playerLadder[idx] = sum;
+  if (isFull(playerLadder)) {
+    scores.player++;
+    rounds++;
+    phase = "gameOver";
+    setMessage("🎉 Grattis! Du fyllde stegen först och vinner!");
+    renderAll();
+    return;
+  }
+  phase = "computerTurn";
+  setMessage("Datorns tur...");
+  renderAll();
+  computerTurn();
+}
+
+function computerTurn() {
+  renderAction();
+  setTimeout(() => {
+    currentPlayer = "computer";
+    const d1 = rollDie(), d2 = rollDie();
+    dice = [d1, d2];
+    renderDice(true);
+
+    setTimeout(() => {
+      renderDice(false);
+      const sum = d1 + d2;
+      const slot = computerChooseSlot(computerLadder, sum);
+
+      if (slot === -1) {
+        setMessage(`Datorn slog ${d1} + ${d2} = ${sum}. Kan inte placeras! Din tur 🎲`);
+        currentPlayer = "player";
+        phase = "roll";
+        renderAll();
+        return;
+      }
+
+      setTimeout(() => {
+        computerLadder[slot] = sum;
+        if (isFull(computerLadder)) {
+          scores.computer++;
+          rounds++;
+          phase = "gameOver";
+          setMessage("Datorn fyllde stegen först! Försök igen 💪");
+          renderAll();
+          return;
+        }
+        setMessage(`Datorn slog ${d1} + ${d2} = ${sum} → plats ${slot + 1}. Din tur! 🎲`);
+        currentPlayer = "player";
+        phase = "roll";
+        renderAll();
+      }, 600);
+    }, 500);
+  }, 800);
+}
+
+init();
+renderMiddle();
+</script>
+</body>
+</html>
