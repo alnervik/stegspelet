@@ -156,7 +156,7 @@
   </div>
   <div class="score-mid" id="score-rounds">vs</div>
   <div style="text-align:center">
-    <div class="score-label" style="color:#ff6b6b">DATOR</div>
+    <div class="score-label" style="color:#ff6b6b">KALLE</div>
     <div class="score-num" style="color:#ff6b6b" id="score-computer">0</div>
   </div>
 </div>
@@ -169,12 +169,12 @@
 
 <div id="ladders">
   <div class="ladder-col">
-    <div class="ladder-title" style="color:#4ecdc4" id="player-title">🧑 Du</div>
+    <div class="ladder-title" style="color:#4ecdc4" id="player-title">😎 Du</div>
     <div class="ladder-slots" id="player-ladder"></div>
     <div class="ladder-count" id="player-count">0/10</div>
   </div>
   <div class="ladder-col">
-    <div class="ladder-title" style="color:#ff6b6b" id="computer-title">🤖 Dator</div>
+    <div class="ladder-title" style="color:#ff6b6b" id="computer-title">🧑🏼‍🏫 Kalle</div>
     <div class="ladder-slots" id="computer-ladder"></div>
     <div class="ladder-count" id="computer-count">0/10</div>
   </div>
@@ -309,7 +309,7 @@ function renderAction() {
   } else if (phase === "cantPlace") {
     area.innerHTML = "";
   } else if (phase === "computerTurn") {
-    area.innerHTML = `<div id="comp-thinking">Datorns tur...</div>`;
+    area.innerHTML = `<div id="comp-thinking">Kalles tur...</div>`;
   } else if (phase === "gameOver") {
     area.innerHTML = `<button class="btn btn-restart" onclick="resetGame()">🔄 Spela igen</button>`;
   }
@@ -362,7 +362,7 @@ function doRoll() {
       renderAction();
       showCantPlace("player", () => {
         phase = "computerTurn";
-        setMessage("Datorns tur...", false);
+        setMessage("Kalles tur...", false);
         renderAll();
         computerTurn();
       });
@@ -387,7 +387,7 @@ function placePlayer(idx) {
     return;
   }
   phase = "computerTurn";
-  setMessage("Datorns tur...", false);
+  setMessage("Kalles tur...", false);
   renderAll();
   computerTurn();
 }
@@ -404,7 +404,7 @@ function computerTurn() {
       const sum = d1 + d2;
       const slot = computerChooseSlot(computerLadder, sum);
       if (slot === -1) {
-        setMessage("Datorn kan inte placera sitt tal! ❌", true);
+        setMessage("Kalle kan inte placera sitt tal! ❌", true);
         phase = "cantPlace";
         renderAction();
         showCantPlace("computer", () => {
@@ -421,7 +421,7 @@ function computerTurn() {
           scores.computer++;
           rounds++;
           phase = "gameOver";
-          setMessage("Datorn fyllde stegen först! Försök igen 💪", false);
+          setMessage("Kalle fyllde stegen först! Försök igen 💪", false);
           renderAll();
           return;
         }
