@@ -49,27 +49,64 @@
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
     animation: shimmer 4s linear infinite; letter-spacing: 2px;
   }
-  #scoreboard {
+  #tabs {
+    display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;
+    margin: 14px 0 4px; padding: 5px;
+    background: rgba(255,255,255,0.05); border-radius: 50px;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .tab {
+    font-family: 'Fredoka', sans-serif; font-size: 15px; font-weight: 600;
+    padding: 9px 22px; border-radius: 50px; border: none;
+    background: transparent; color: rgba(255,255,255,0.55);
+    cursor: pointer; letter-spacing: 0.5px;
+    transition: background 0.2s, color 0.2s;
+  }
+  .tab:hover { color: rgba(255,255,255,0.9); }
+  .tab.active {
+    background: linear-gradient(135deg, #ffc83d, #f0a030);
+    color: #1a1a2e;
+    box-shadow: 0 3px 14px rgba(255,200,60,0.25);
+  }
+  .view { display: flex; flex-direction: column; align-items: center; width: 100%; }
+  .view.hidden { display: none; }
+  .scoreboard {
     display: flex; gap: 24px; align-items: center;
     margin: 8px 0 16px; padding: 10px 28px;
     background: rgba(255,255,255,0.06); border-radius: 16px;
     backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.08);
   }
-  .score-label { font-size: 12px; font-weight: 600; letter-spacing: 1px; }
+  .score-label {
+    font-size: 12px; font-weight: 600; letter-spacing: 1px;
+    max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
   .score-num { font-size: 28px; font-weight: 700; }
   .score-mid { font-size: 13px; color: rgba(255,255,255,0.3); padding: 0 8px; }
-  #message {
+  .names {
+    display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;
+    margin-bottom: 12px;
+  }
+  .name-input {
+    font-family: 'Fredoka', sans-serif; font-size: 14px; font-weight: 600;
+    padding: 8px 14px; width: 150px; text-align: center;
+    border-radius: 50px; border: 2px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.05); color: #fff;
+    outline: none; transition: border-color 0.2s;
+  }
+  .name-input::placeholder { color: rgba(255,255,255,0.3); font-weight: 500; }
+  .name-input:focus { border-color: rgba(255,255,255,0.35); }
+  .message {
     font-size: 15px; font-weight: 500; color: rgba(255,255,255,0.85);
     text-align: center; min-height: 26px; margin-bottom: 12px;
     max-width: 360px; line-height: 1.4;
     transition: color 0.3s;
   }
-  #message.warning {
+  .message.warning {
     color: #ff6b6b;
     font-size: 17px;
     font-weight: 600;
   }
-  #dice-area {
+  .dice-area {
     display: flex; gap: 16px; align-items: center;
     margin-bottom: 10px; min-height: 60px;
   }
@@ -95,14 +132,14 @@
     background: linear-gradient(135deg, #4ecdc4, #2ea69e);
     color: #fff; box-shadow: 0 4px 20px rgba(78,205,196,0.3);
   }
-  #hint {
+  .hint {
     font-size: 13px; color: #ffc83d; margin-bottom: 14px;
     font-weight: 500;
   }
-  #comp-thinking {
+  .thinking {
     font-size: 14px; color: #ff6b6b; margin-bottom: 14px; font-weight: 500;
   }
-  #ladders {
+  .ladders {
     display: flex; gap: 32px; justify-content: center;
     align-items: flex-start; flex-wrap: wrap;
   }
@@ -110,6 +147,7 @@
   .ladder-title {
     font-weight: 600; font-size: 18px; margin-bottom: 6px;
     text-transform: uppercase; letter-spacing: 1.5px; transition: all 0.3s;
+    max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
   .ladder-slots { display: flex; flex-direction: column; gap: 4px; }
   .slot {
@@ -136,81 +174,153 @@
     background: rgba(255,80,80,0.15) !important;
   }
   .ladder-count { font-size: 12px; color: rgba(255,255,255,0.35); margin-top: 4px; }
-  #rules {
+  .rules {
     margin-top: 24px; padding: 16px 20px;
     background: rgba(255,255,255,0.04); border-radius: 14px;
     max-width: 380px; border: 1px solid rgba(255,255,255,0.06);
   }
-  #rules h3 { font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.5); margin-bottom: 6px; }
-  #rules p { font-size: 12px; color: rgba(255,255,255,0.35); line-height: 1.7; }
+  .rules h3 { font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.5); margin-bottom: 6px; }
+  .rules p { font-size: 12px; color: rgba(255,255,255,0.35); line-height: 1.7; }
 </style>
 </head>
 <body>
 
 <h1>🪜 STEGSPELET 🪜</h1>
 
-<div id="scoreboard">
-  <div style="text-align:center">
-    <div class="score-label" style="color:#4ecdc4">DU</div>
-    <div class="score-num" style="color:#4ecdc4" id="score-player">0</div>
-  </div>
-  <div class="score-mid" id="score-rounds">vs</div>
-  <div style="text-align:center">
-    <div class="score-label" style="color:#ff6b6b">KALLE</div>
-    <div class="score-num" style="color:#ff6b6b" id="score-computer">0</div>
-  </div>
+<div id="tabs">
+  <button class="tab active" id="tab-cpu" onclick="showView('cpu')">🧑🏼‍🏫 Mot Kalle</button>
+  <button class="tab" id="tab-duo" onclick="showView('duo')">👥 Två spelare</button>
 </div>
 
-<div id="message">Välkommen till Stegspelet!</div>
+<!-- ============ FLIK 1: mot datorn (Kalle) ============ -->
+<div class="view" id="view-cpu">
 
-<div id="dice-area"></div>
-
-<div id="action-area"></div>
-
-<div id="ladders">
-  <div class="ladder-col">
-    <div class="ladder-title" style="color:#4ecdc4" id="player-title">😎 Du</div>
-    <div class="ladder-slots" id="player-ladder"></div>
-    <div class="ladder-count" id="player-count">0/10</div>
+  <div class="scoreboard">
+    <div style="text-align:center">
+      <div class="score-label" style="color:#4ecdc4" id="cpu-p1-score-label">DU</div>
+      <div class="score-num" style="color:#4ecdc4" id="cpu-p1-score">0</div>
+    </div>
+    <div class="score-mid" id="cpu-rounds">vs</div>
+    <div style="text-align:center">
+      <div class="score-label" style="color:#ff6b6b" id="cpu-p2-score-label">KALLE</div>
+      <div class="score-num" style="color:#ff6b6b" id="cpu-p2-score">0</div>
+    </div>
   </div>
-  <div class="ladder-col">
-    <div class="ladder-title" style="color:#ff6b6b" id="computer-title">🧑🏼‍🏫 Kalle</div>
-    <div class="ladder-slots" id="computer-ladder"></div>
-    <div class="ladder-count" id="computer-count">0/10</div>
+
+  <div class="message" id="cpu-message">Välkommen till Stegspelet!</div>
+
+  <div class="dice-area" id="cpu-dice"></div>
+
+  <div id="cpu-action"></div>
+
+  <div class="ladders">
+    <div class="ladder-col">
+      <div class="ladder-title" style="color:#4ecdc4" id="cpu-p1-title">😎 Du</div>
+      <div class="ladder-slots" id="cpu-p1-ladder"></div>
+      <div class="ladder-count" id="cpu-p1-count">0/10</div>
+    </div>
+    <div class="ladder-col">
+      <div class="ladder-title" style="color:#ff6b6b" id="cpu-p2-title">🧑🏼‍🏫 Kalle</div>
+      <div class="ladder-slots" id="cpu-p2-ladder"></div>
+      <div class="ladder-count" id="cpu-p2-count">0/10</div>
+    </div>
   </div>
+
+  <div class="rules">
+    <h3>📖 Regler</h3>
+    <p>Slå två tärningar och räkna ihop prickarna!
+    Placera summan i din stege. Talen måste vara i stigande ordning
+    nerifrån och upp — lägst längst ner, högst längst upp.
+    Kan du inte placera talet förlorar du turen.
+    Fyll stegen först för att vinna! 🏆</p>
+  </div>
+
 </div>
 
-<div id="rules">
-  <h3>📖 Regler</h3>
-  <p>Slå två tärningar och räkna ihop prickarna!
-  Placera summan i din stege. Talen måste vara i stigande ordning
-  nerifrån och upp — lägst längst ner, högst längst upp.
-  Kan du inte placera talet förlorar du turen.
-  Fyll stegen först för att vinna! 🏆</p>
+<!-- ============ FLIK 2: två spelare ============ -->
+<div class="view hidden" id="view-duo">
+
+  <div class="names">
+    <input class="name-input" id="duo-p1-name" maxlength="12" placeholder="Spelare 1"
+           style="color:#4ecdc4" oninput="renameDuo('p1', this.value)">
+    <input class="name-input" id="duo-p2-name" maxlength="12" placeholder="Spelare 2"
+           style="color:#ffc83d" oninput="renameDuo('p2', this.value)">
+  </div>
+
+  <div class="scoreboard">
+    <div style="text-align:center">
+      <div class="score-label" style="color:#4ecdc4" id="duo-p1-score-label">SPELARE 1</div>
+      <div class="score-num" style="color:#4ecdc4" id="duo-p1-score">0</div>
+    </div>
+    <div class="score-mid" id="duo-rounds">vs</div>
+    <div style="text-align:center">
+      <div class="score-label" style="color:#ffc83d" id="duo-p2-score-label">SPELARE 2</div>
+      <div class="score-num" style="color:#ffc83d" id="duo-p2-score">0</div>
+    </div>
+  </div>
+
+  <div class="message" id="duo-message">Två spelare — turas om att slå tärningarna!</div>
+
+  <div class="dice-area" id="duo-dice"></div>
+
+  <div id="duo-action"></div>
+
+  <div class="ladders">
+    <div class="ladder-col">
+      <div class="ladder-title" style="color:#4ecdc4" id="duo-p1-title">😎 Spelare 1</div>
+      <div class="ladder-slots" id="duo-p1-ladder"></div>
+      <div class="ladder-count" id="duo-p1-count">0/10</div>
+    </div>
+    <div class="ladder-col">
+      <div class="ladder-title" style="color:#ffc83d" id="duo-p2-title">🦊 Spelare 2</div>
+      <div class="ladder-slots" id="duo-p2-ladder"></div>
+      <div class="ladder-count" id="duo-p2-count">0/10</div>
+    </div>
+  </div>
+
+  <div class="rules">
+    <h3>📖 Regler</h3>
+    <p>Spela mot en kompis på samma skärm! Ni turas om att slå två tärningar
+    och räkna ihop prickarna. Placera summan i din egen stege — talen måste vara
+    i stigande ordning nerifrån och upp. Kan du inte placera talet går turen
+    vidare till den andra spelaren. Den som fyller sin stege först vinner! 🏆</p>
+  </div>
+
 </div>
 
 <script>
 const SLOTS = 10, MIN_SUM = 2, MAX_SUM = 12;
-let playerLadder, computerLadder, dice, phase, currentPlayer, scores, rounds;
 
-function init() {
-  scores = { player: 0, computer: 0 };
-  rounds = 0;
-  phase = "start";
-  renderScoreboard();
-  renderAction();
+/* ---------- Spelen: ett per flik ---------- */
+const games = {
+  cpu: {
+    id: "cpu",
+    players: {
+      p1: { key: "p1", name: "Du", emoji: "😎", color: "#4ecdc4", human: true },
+      p2: { key: "p2", name: "Kalle", emoji: "🧑🏼‍🏫", color: "#ff6b6b", human: false }
+    }
+  },
+  duo: {
+    id: "duo",
+    players: {
+      p1: { key: "p1", name: "Spelare 1", emoji: "😎", color: "#4ecdc4", human: true },
+      p2: { key: "p2", name: "Spelare 2", emoji: "🦊", color: "#ffc83d", human: true }
+    }
+  }
+};
+
+function other(key) { return key === "p1" ? "p2" : "p1"; }
+function el(g, suffix) { return document.getElementById(g.id + "-" + suffix); }
+
+/* ---------- Flikar ---------- */
+function showView(id) {
+  ["cpu", "duo"].forEach(v => {
+    document.getElementById("view-" + v).classList.toggle("hidden", v !== id);
+    document.getElementById("tab-" + v).classList.toggle("active", v === id);
+  });
 }
 
-function resetGame() {
-  playerLadder = Array(SLOTS).fill(null);
-  computerLadder = Array(SLOTS).fill(null);
-  dice = [0, 0];
-  phase = "roll";
-  currentPlayer = "player";
-  setMessage("Din tur — slå tärningarna! 🎲", false);
-  renderAll();
-}
-
+/* ---------- Spellogik (delad) ---------- */
 function rollDie() { return Math.floor(Math.random() * 6) + 1; }
 
 function getValidSlots(ladder, value) {
@@ -237,10 +347,50 @@ function computerChooseSlot(ladder, value) {
   return best;
 }
 
-function setMessage(txt, warning) {
-  const el = document.getElementById("message");
-  el.textContent = txt;
-  if (warning) el.classList.add("warning"); else el.classList.remove("warning");
+/* ---------- Texter ---------- */
+function turnText(g, key) {
+  if (g.id === "cpu" && key === "p1") return "Din tur — slå tärningarna! 🎲";
+  return g.players[key].name + " — slå tärningarna! 🎲";
+}
+function cantPlaceText(g, key) {
+  if (g.id === "cpu" && key === "p1") return "Det går inte att placera! Turen går vidare... ❌";
+  return g.players[key].name + " kan inte placera talet! Turen går vidare... ❌";
+}
+function winText(g, key) {
+  if (g.id === "cpu") {
+    return key === "p1"
+      ? "🎉 Grattis! Du fyllde stegen först och vinner!"
+      : "Kalle fyllde stegen först! Försök igen 💪";
+  }
+  return "🎉 " + g.players[key].name + " fyllde stegen först och vinner!";
+}
+
+/* ---------- Init / reset ---------- */
+function init(g) {
+  g.scores = { p1: 0, p2: 0 };
+  g.rounds = 0;
+  g.ladders = { p1: Array(SLOTS).fill(null), p2: Array(SLOTS).fill(null) };
+  g.dice = [0, 0];
+  g.phase = "start";
+  g.current = "p1";
+  renderAll(g);
+}
+
+function resetGame(id) {
+  const g = games[id];
+  g.ladders = { p1: Array(SLOTS).fill(null), p2: Array(SLOTS).fill(null) };
+  g.dice = [0, 0];
+  g.phase = "roll";
+  g.current = "p1";
+  setMessage(g, turnText(g, "p1"), false);
+  renderAll(g);
+}
+
+/* ---------- Rendering ---------- */
+function setMessage(g, txt, warning) {
+  const m = el(g, "message");
+  m.textContent = txt;
+  if (warning) m.classList.add("warning"); else m.classList.remove("warning");
 }
 
 function makeDiceSVG(value, rolling) {
@@ -256,18 +406,21 @@ function makeDiceSVG(value, rolling) {
     ${dots}</svg>`;
 }
 
-function renderDice(rolling) {
-  const area = document.getElementById("dice-area");
-  if (dice[0] === 0) { area.innerHTML = ""; return; }
-  area.innerHTML = makeDiceSVG(dice[0], rolling) +
+function renderDice(g, rolling) {
+  const area = el(g, "dice");
+  if (g.dice[0] === 0) { area.innerHTML = ""; return; }
+  area.innerHTML = makeDiceSVG(g.dice[0], rolling) +
     `<span class="dice-plus">+</span>` +
-    makeDiceSVG(dice[1], rolling);
+    makeDiceSVG(g.dice[1], rolling);
 }
 
-function renderLadder(id, ladder, validSlots, color) {
-  const el = document.getElementById(id);
-  el.innerHTML = "";
-  // Slot 9 (position 10) at top, slot 0 (position 1) at bottom
+function renderLadder(g, key, validSlots) {
+  const player = g.players[key];
+  const ladder = g.ladders[key];
+  const color = player.color;
+  const box = el(g, key + "-ladder");
+  box.innerHTML = "";
+  // Ruta 10 överst, ruta 1 längst ner
   for (let i = SLOTS - 1; i >= 0; i--) {
     const div = document.createElement("div");
     div.className = "slot";
@@ -281,7 +434,7 @@ function renderLadder(id, ladder, validSlots, color) {
       div.style.border = `2.5px solid ${color}`;
       div.style.setProperty("--glow-color", `${color}44`);
       div.style.setProperty("--glow-color-inner", `${color}18`);
-      div.onclick = () => placePlayer(i);
+      div.onclick = () => place(g.id, key, i);
     } else if (isEmpty) {
       div.classList.add("empty");
     } else {
@@ -291,55 +444,56 @@ function renderLadder(id, ladder, validSlots, color) {
       div.style.color = color;
       div.textContent = val;
     }
-    el.appendChild(div);
+    box.appendChild(div);
   }
-  const countId = id.replace("-ladder", "-count");
-  document.getElementById(countId).textContent =
-    ladder.filter(v => v !== null).length + "/10";
+  el(g, key + "-count").textContent = ladder.filter(v => v !== null).length + "/10";
+  el(g, key + "-title").textContent = player.emoji + " " + player.name;
+  el(g, key + "-title").style.textShadow =
+    g.current === key ? `0 0 20px ${player.color}55` : "none";
 }
 
-function renderAction() {
-  const area = document.getElementById("action-area");
-  if (phase === "start") {
-    area.innerHTML = `<button class="btn btn-roll" onclick="resetGame()">🎲 Starta spel</button>`;
-  } else if (phase === "roll") {
-    area.innerHTML = `<button class="btn btn-roll" onclick="doRoll()">🎲 Slå tärningarna</button>`;
-  } else if (phase === "place") {
-    area.innerHTML = `<div id="hint">▼ Välj en lysande ruta ▼</div>`;
-  } else if (phase === "cantPlace") {
+function renderAction(g) {
+  const area = el(g, "action");
+  if (g.phase === "start") {
+    area.innerHTML = `<button class="btn btn-roll" onclick="resetGame('${g.id}')">🎲 Starta spel</button>`;
+  } else if (g.phase === "roll") {
+    const label = g.id === "duo"
+      ? `🎲 ${g.players[g.current].name} slår`
+      : "🎲 Slå tärningarna";
+    area.innerHTML = `<button class="btn btn-roll" onclick="doRoll('${g.id}')">${label}</button>`;
+  } else if (g.phase === "place") {
+    area.innerHTML = `<div class="hint">▼ Välj en lysande ruta ▼</div>`;
+  } else if (g.phase === "cantPlace") {
     area.innerHTML = "";
-  } else if (phase === "computerTurn") {
-    area.innerHTML = `<div id="comp-thinking">Kalles tur...</div>`;
-  } else if (phase === "gameOver") {
-    area.innerHTML = `<button class="btn btn-restart" onclick="resetGame()">🔄 Spela igen</button>`;
+  } else if (g.phase === "botTurn") {
+    area.innerHTML = `<div class="thinking">${g.players.p2.name}s tur...</div>`;
+  } else if (g.phase === "gameOver") {
+    area.innerHTML = `<button class="btn btn-restart" onclick="resetGame('${g.id}')">🔄 Spela igen</button>`;
   }
 }
 
-function renderScoreboard() {
-  document.getElementById("score-player").textContent = scores.player;
-  document.getElementById("score-computer").textContent = scores.computer;
-  document.getElementById("score-rounds").textContent =
-    rounds > 0 ? `${rounds} ${rounds === 1 ? "runda" : "rundor"}` : "vs";
+function renderScoreboard(g) {
+  ["p1", "p2"].forEach(key => {
+    el(g, key + "-score").textContent = g.scores[key];
+    el(g, key + "-score-label").textContent = g.players[key].name.toUpperCase();
+  });
+  el(g, "rounds").textContent =
+    g.rounds > 0 ? `${g.rounds} ${g.rounds === 1 ? "runda" : "rundor"}` : "vs";
 }
 
-function renderAll() {
-  const sum = dice[0] + dice[1];
-  const pValid = phase === "place" && currentPlayer === "player"
-    ? getValidSlots(playerLadder, sum) : [];
-  renderDice(false);
-  renderLadder("player-ladder", playerLadder, pValid, "#4ecdc4");
-  renderLadder("computer-ladder", computerLadder, [], "#ff6b6b");
-  renderAction();
-  renderScoreboard();
-  document.getElementById("player-title").style.textShadow =
-    currentPlayer === "player" ? "0 0 20px #4ecdc455" : "none";
-  document.getElementById("computer-title").style.textShadow =
-    currentPlayer === "computer" ? "0 0 20px #ff6b6b55" : "none";
+function renderAll(g) {
+  const sum = g.dice[0] + g.dice[1];
+  renderDice(g, false);
+  ["p1", "p2"].forEach(key => {
+    const showValid = g.phase === "place" && g.current === key && g.players[key].human;
+    renderLadder(g, key, showValid ? getValidSlots(g.ladders[key], sum) : []);
+  });
+  renderAction(g);
+  renderScoreboard(g);
 }
 
-function showCantPlace(who, callback) {
-  const ladderId = who === "player" ? "player-ladder" : "computer-ladder";
-  const slots = document.getElementById(ladderId).querySelectorAll(".slot.empty");
+function showCantPlace(g, key, callback) {
+  const slots = el(g, key + "-ladder").querySelectorAll(".slot.empty");
   slots.forEach(s => s.classList.add("cant-place"));
   setTimeout(() => {
     slots.forEach(s => s.classList.remove("cant-place"));
@@ -347,94 +501,98 @@ function showCantPlace(who, callback) {
   }, 3000);
 }
 
-function doRoll() {
-  if (phase !== "roll" || currentPlayer !== "player") return;
-  const d1 = rollDie(), d2 = rollDie();
-  dice = [d1, d2];
-  renderDice(true);
+/* ---------- Turordning ---------- */
+function nextTurn(g) {
+  g.current = other(g.current);
+  if (g.players[g.current].human) {
+    g.phase = "roll";
+    setMessage(g, turnText(g, g.current), false);
+    renderAll(g);
+  } else {
+    g.phase = "botTurn";
+    setMessage(g, g.players[g.current].name + "s tur...", false);
+    renderAll(g);
+    botTurn(g);
+  }
+}
+
+function finishTurn(g, key) {
+  if (isFull(g.ladders[key])) {
+    g.scores[key]++;
+    g.rounds++;
+    g.phase = "gameOver";
+    setMessage(g, winText(g, key), false);
+    renderAll(g);
+    return;
+  }
+  nextTurn(g);
+}
+
+/* ---------- Mänsklig tur ---------- */
+function doRoll(id) {
+  const g = games[id];
+  if (g.phase !== "roll" || !g.players[g.current].human) return;
+  const key = g.current;
+  g.dice = [rollDie(), rollDie()];
+  renderDice(g, true);
   setTimeout(() => {
-    renderDice(false);
-    const sum = d1 + d2;
-    const valid = getValidSlots(playerLadder, sum);
-    if (valid.length === 0) {
-      setMessage("Det går inte att placera! Turen går vidare... ❌", true);
-      phase = "cantPlace";
-      renderAction();
-      showCantPlace("player", () => {
-        phase = "computerTurn";
-        setMessage("Kalles tur...", false);
-        renderAll();
-        computerTurn();
-      });
+    renderDice(g, false);
+    const sum = g.dice[0] + g.dice[1];
+    if (getValidSlots(g.ladders[key], sum).length === 0) {
+      setMessage(g, cantPlaceText(g, key), true);
+      g.phase = "cantPlace";
+      renderAction(g);
+      showCantPlace(g, key, () => nextTurn(g));
     } else {
-      setMessage("Räkna ihop prickarna och välj en plats!", false);
-      phase = "place";
-      renderAll();
+      setMessage(g, "Räkna ihop prickarna och välj en plats!", false);
+      g.phase = "place";
+      renderAll(g);
     }
   }, 500);
 }
 
-function placePlayer(idx) {
-  if (phase !== "place" || currentPlayer !== "player") return;
-  const sum = dice[0] + dice[1];
-  playerLadder[idx] = sum;
-  if (isFull(playerLadder)) {
-    scores.player++;
-    rounds++;
-    phase = "gameOver";
-    setMessage("🎉 Grattis! Du fyllde stegen först och vinner!", false);
-    renderAll();
-    return;
-  }
-  phase = "computerTurn";
-  setMessage("Kalles tur...", false);
-  renderAll();
-  computerTurn();
+function place(id, key, idx) {
+  const g = games[id];
+  if (g.phase !== "place" || g.current !== key || !g.players[key].human) return;
+  g.ladders[key][idx] = g.dice[0] + g.dice[1];
+  finishTurn(g, key);
 }
 
-function computerTurn() {
-  renderAction();
+/* ---------- Datorns tur ---------- */
+function botTurn(g) {
+  const key = g.current;
   setTimeout(() => {
-    currentPlayer = "computer";
-    const d1 = rollDie(), d2 = rollDie();
-    dice = [d1, d2];
-    renderDice(true);
+    g.dice = [rollDie(), rollDie()];
+    renderDice(g, true);
     setTimeout(() => {
-      renderDice(false);
-      const sum = d1 + d2;
-      const slot = computerChooseSlot(computerLadder, sum);
+      renderDice(g, false);
+      const sum = g.dice[0] + g.dice[1];
+      const slot = computerChooseSlot(g.ladders[key], sum);
       if (slot === -1) {
-        setMessage("Kalle kan inte placera sitt tal! ❌", true);
-        phase = "cantPlace";
-        renderAction();
-        showCantPlace("computer", () => {
-          setMessage("Din tur — slå tärningarna! 🎲", false);
-          currentPlayer = "player";
-          phase = "roll";
-          renderAll();
-        });
+        setMessage(g, g.players[key].name + " kan inte placera sitt tal! ❌", true);
+        g.phase = "cantPlace";
+        renderAction(g);
+        showCantPlace(g, key, () => nextTurn(g));
         return;
       }
       setTimeout(() => {
-        computerLadder[slot] = sum;
-        if (isFull(computerLadder)) {
-          scores.computer++;
-          rounds++;
-          phase = "gameOver";
-          setMessage("Kalle fyllde stegen först! Försök igen 💪", false);
-          renderAll();
-          return;
-        }
-        setMessage("Din tur — slå tärningarna! 🎲", false);
-        currentPlayer = "player";
-        phase = "roll";
-        renderAll();
+        g.ladders[key][slot] = sum;
+        finishTurn(g, key);
       }, 600);
     }, 500);
   }, 800);
 }
 
-init();
+/* ---------- Namnbyte (två spelare) ---------- */
+function renameDuo(key, value) {
+  const g = games.duo;
+  const fallback = key === "p1" ? "Spelare 1" : "Spelare 2";
+  g.players[key].name = value.trim() || fallback;
+  renderAll(g);
+}
+
+init(games.cpu);
+init(games.duo);
 </script>
 </body>
 </html>
